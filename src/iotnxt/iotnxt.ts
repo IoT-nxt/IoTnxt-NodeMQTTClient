@@ -1,7 +1,9 @@
 import * as events from 'events'
 import mqtt = require('mqtt');
-import crypto = require("crypto");
 
+//Internal imports
+import { CryptoUtils , RSAcredentials} from './../utils/crypto.utils';
+import { StringUtils } from './../utils/string.utils';
 
 export class IotnxtQueue extends events.EventEmitter {
   a = 0;
@@ -49,7 +51,7 @@ export class IotnxtQueue extends events.EventEmitter {
 
     this.Devices = Devices;
 
-    genAESkeys((AES:any)=>{
+    CryptoUtils.genAESkeys((AES:any)=>{
       this.AES = AES;
       this.connectGreenQ((err:Error,secret:any)=>{
         if (err) console.log(err);
@@ -97,7 +99,7 @@ export class IotnxtQueue extends events.EventEmitter {
     }
 
 
-    var replyKey = "MessageAuthNotify.".toUpperCase() + getGUID().toUpperCase();
+    var replyKey = "MessageAuthNotify.".toUpperCase() + StringUtils.getGUID().toUpperCase();
     var mqttGreen = mqtt.connect("mqtts://" + this.hostaddress + ":8883", greenOptions);
 
     mqttGreen.on('error', (err: any) => { cb(err,undefined); })
@@ -117,7 +119,7 @@ export class IotnxtQueue extends events.EventEmitter {
             Headers: {}
           }
 
-          var cipher = createCipheriv(this.AES);
+          var cipher = CryptoUtils.createCipheriv(this.AES);
           var textBuffer = Buffer.from(JSON.stringify(messageAuthRequest));
           var encrypted = cipher.update(textBuffer)
           var encryptedFinal = cipher.final()
@@ -134,8 +136,8 @@ export class IotnxtQueue extends events.EventEmitter {
               IsEncrypted: true,
               Headers: {
                   //SymKey: publicKeyRSA.encrypt(AES.key, "UTF8", "base64", ursa.RSA_PKCS1_PADDING).toString("base64"),
-                  SymIv: RSAENCRYPT(this.AES.iv, RSAcreds),
-                  SymKey: RSAENCRYPT(this.AES.key, RSAcreds)
+                  SymIv: CryptoUtils.RSAENCRYPT(this.AES.iv, RSAcreds),
+                  SymKey: CryptoUtils.RSAENCRYPT(this.AES.key, RSAcreds)
               },
               PostUtc: new Date().toISOString(),
               ReplyKey: replyKey.toUpperCase()
@@ -154,7 +156,7 @@ export class IotnxtQueue extends events.EventEmitter {
     mqttGreen.on('message', (topic: string, message: Buffer, packet: any) => {
       var json = JSON.parse(message.toString());
       var payload = Buffer.from(json.Payload, "base64");
-      var decipher = createDecipheriv(this.AES);
+      var decipher = CryptoUtils.createDecipheriv(this.AES);
       var result = Buffer.concat([decipher.update(payload), decipher.final()]);
       var secret = JSON.parse(result.toString());
       
@@ -238,7 +240,7 @@ export class IotnxtQueue extends events.EventEmitter {
         IsEncrypted: false,
         Headers: {},
         PostUtc: new Date().toISOString(),
-        ReplyKey: "DAPI.1.DAPI.REPLY.1." + this.secret.ClientId.toUpperCase() + "." + getGUID().toUpperCase() + "." + getGUID().toUpperCase()
+        ReplyKey: "DAPI.1.DAPI.REPLY.1." + this.secret.ClientId.toUpperCase() + "." + StringUtils.getGUID().toUpperCase() + "." + StringUtils.getGUID().toUpperCase()
     }
 
 
@@ -296,11 +298,11 @@ export class IotnxtQueue extends events.EventEmitter {
     var dateNow = new Date();
     var fromUtc = new Date(dateNow.getTime() - 15 * 1000)
 
-    packet.MessageId  = getGUID();
+    packet.MessageId  = StringUtils.getGUID();
     packet.PostUtc = dateNow.toISOString();
     packet.MessageSourceId = null;
     packet.fromUtc = fromUtc.toISOString();
-    packet.sourceMessageID = getGUID();
+    packet.sourceMessageID = StringUtils.getGUID();
 
     //console.log(packet);
 
@@ -368,79 +370,3 @@ export function findDeviceGateway(deviceState:any, db:any, serverGateways:any, c
 } 
 
 
-
-
-
-
-export interface RSAcredentials {
-    modulus: string,
-    exponent: string
-}
-
-export function RSAENCRYPT(text: string, credentials: RSAcredentials) {
-    // https://stackoverflow.com/questions/27568570/how-to-convert-raw-modulus-exponent-to-rsa-public-key-pem-format
-
-    var publicKey = RSAgenPEM(credentials.modulus, credentials.exponent);
-    var buffer = Buffer.from(text);
-
-    var rsakey = {
-        key: publicKey,
-        padding: 1 //crypto.constants.RSA_PKCS1_PADDING  
-    }
-
-    //An optional padding value defined in crypto.constants, which may be: crypto.constants.RSA_NO_PADDING, RSA_PKCS1_PADDING, or crypto.constants.RSA_PKCS1_OAEP_PADDING.
-
-    var encrypted = crypto.publicEncrypt(rsakey, buffer);
-    return encrypted.toString("base64");
-}
-
-export function RSAgenPEM(modulus: string, exponent: string) {
-    // by Rouan van der Ende
-    // converts a raw modulus/exponent public key to a PEM format.
-
-    var header = Buffer.from("MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA", 'base64'); //Standard header
-    var mod = Buffer.from(modulus, 'base64');
-    var midHeader = Buffer.from([0x02, 0x03]);
-    var exp = Buffer.from(exponent, 'base64');
-
-    //combine
-    var key = Buffer.concat([header, mod, midHeader, exp])
-    var keybase64 = key.toString("base64");
-
-    var PEM = "-----BEGIN PUBLIC KEY-----\r\n"
-
-    for (var a = 0; a <= Math.floor(keybase64.length / 64); a++) {
-        PEM += keybase64.slice(0 + (64 * a), 64 + (64 * a)) + "\r\n";
-    }
-
-    PEM += "-----END PUBLIC KEY-----\r\n"
-
-    return PEM;
-}
-
-export function genAESkeys (callback:any) {
-      crypto.pseudoRandomBytes(32, function (err, keyBuffer) {
-          crypto.pseudoRandomBytes(16, function (err, ivBuffer) {
-              callback({ key: keyBuffer, iv: ivBuffer });
-          });
-      });
-}
-
-export function createCipheriv(AES: any, algorithm: string = "aes-256-cbc"): crypto.Cipher {
-    return crypto.createCipheriv(algorithm, AES.key, AES.iv);
-}
-
-export function createDecipheriv(AES: any, algorithm: string = "aes-256-cbc"): crypto.Decipher {
-    return crypto.createDecipheriv(algorithm, AES.key, AES.iv);
-}
-
-
-export function getGUID() {
-  var d = new Date().getTime();
-  var uuid: string = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
-      var r = (d + Math.random() * 16) % 16 | 0;
-      d = Math.floor(d / 16);
-      return (c == 'x' ? r : (r & 0x3 | 0x8)).toString(16);
-  });
-  return uuid;
-};

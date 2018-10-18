@@ -11,7 +11,7 @@ Instructions:
 ------------
 
 Associate a new gateway on Portal. 
-Enter the same GatewayId in /src/config.ts
+Enter the same GatewayId in /src/main.ts
 
 ```
 npm install
@@ -20,7 +20,11 @@ npm install
 In another terminal:
 
 ```
-npm start
+npm run buildwatch
+```
+
+```
+npm run start
 ```
 
 Features:
