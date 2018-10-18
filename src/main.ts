@@ -20,7 +20,7 @@ var iotnxtqueue = new iotnxt.IotnxtQueue(
     GatewayId: "TutorialGateway01",
     //secret is your password to connect the Gateway, this cannot be changed , dont share with anyone!
     secretkey: "166123181241239",
-    FirmwareVersion: "5.0.25",
+    FirmwareVersion: "5.0.26",
     Make:  "Pi Gateway",
     Model: "nodejs client",
     id: "Pi 3 B",
