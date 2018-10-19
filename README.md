@@ -30,12 +30,12 @@ npm run start
 Features:
 ---------
 
-- sqlite persistance layer
 - bandwidth optimized publish algorithm that diff's data before sending
 
 Planned:
 --------
 
+- sqlite persistance layer
 - Locally hosted web interface
 
 Tips:
