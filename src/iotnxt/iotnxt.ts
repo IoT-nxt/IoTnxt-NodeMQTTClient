@@ -1,3 +1,4 @@
+import { GatewayConfig } from '../abstractions/interfaces/gatewayConfig';
 import * as events from 'events'
 import mqtt = require('mqtt');
 
@@ -6,47 +7,47 @@ import { CryptoUtils, RSAcredentials } from './../utils/crypto.utils';
 import { StringUtils } from './../utils/string.utils';
 
 export class IotnxtQueue extends events.EventEmitter {
-  a = 0;
-  RoutingKeyBase: any;
-  connected: boolean = false;
+  private a = 0;
+  private RoutingKeyBase: any;
+  private connected: boolean = false;
 
-  state: any = { "deviceGroups": {} };
+  private state: any = { "deviceGroups": {} };
 
-  GatewayId: string = "";
-  secretkey: string = "";
+  private GatewayId: string = "";
+  private secretkey: string = "";
 
-  secret: any = {}; //red queue stuff
+  private secret: any = {}; //red queue stuff
 
-  hostaddress: string = "";
-  Make: string = "";
-  Model: string = "";
-  FirmwareVersion: string = "";
-  Location: string = "";
+  private hostaddress: string = "";
+  private Make: string = "";
+  private Model: string = "";
+  private FirmwareVersion: string = "";
+  private Location: string = "";
 
-  Devices: any = {};
-  GatewayFirstContact: boolean = false;
-  IsIoTHubDevice: boolean = false;
-  Config: any = {};
-  ClientId: string = "";
-  modulus: string = "";
-  exponent: string = "";
-  AES: any = {};
+  private Devices: any = {};
+  private GatewayFirstContact: boolean = false;
+  private IsIoTHubDevice: boolean = false;
+  private Config: any = {};
+  private ClientId: string = "";
+  private modulus: string = "";
+  private exponent: string = "";
+  private AES: any = {};
 
-  mqttRed: mqtt.MqttClient | any;
+  private mqttRed: mqtt.MqttClient | any;
 
-  constructor(config: any, Devices: any, force: boolean) {
+  constructor(config: GatewayConfig, Devices: any, force: boolean) {
     super();
-    this.GatewayId = config.GatewayId;
-    this.hostaddress = config.hostaddress;
+    this.GatewayId = config.gatewayId;
+    this.hostaddress = config.hostAddress;
 
-    this.Make = config.Make;
-    this.Model = config.Model;
-    this.FirmwareVersion = config.FirmwareVersion;
-    this.Location = config.Location;
-    this.secretkey = config.secretkey
+    this.Make = config.make;
+    this.Model = config.model;
+    this.FirmwareVersion = config.firmwareVersion;
+    this.Location = config.location || "";
+    this.secretkey = config.secretKey
 
-    this.modulus = config.publickey.split("<").join(',').split(">").join(',').split(',')[8];
-    this.exponent = config.publickey.split("<").join(',').split(">").join(',').split(',')[4]
+    this.modulus = config.publicKey.split("<").join(',').split(">").join(',').split(',')[8];
+    this.exponent = config.publicKey.split("<").join(',').split(">").join(',').split(',')[4]
 
     this.Devices = Devices;
   }
@@ -84,7 +85,7 @@ export class IotnxtQueue extends events.EventEmitter {
   }
   /* ################################################################################## */
 
-  connectGreenQ(cb: any) {
+  public connectGreenQ(cb: any) : void {
     var greenOptions = {
       clientId: this.GatewayId + ".GREEN." + ((Date.now() * 10000) + 621355968000000000),
       username: "green1:public1",
@@ -176,7 +177,7 @@ export class IotnxtQueue extends events.EventEmitter {
 
 
 
-  connectRedQ(cb: any) {
+  public connectRedQ(cb: any) : void {
 
     var redoptions = {
       clientId: this.secret.ClientId + ".RED." + ((Date.now() * 10000) + 621355968000000000),
