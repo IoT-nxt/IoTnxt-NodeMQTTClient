@@ -4,8 +4,10 @@
   "description": "Typescrypt based IoT framework for general purpose remote monitoring/control.",
   "main": "src/main.js",
   "scripts": {
-    "start": "node ./build/main.js",
-    "buildwatch": "tsc --w --lib es2015 ./src/main.ts --outDir ./build"
+    "start": "tsc & node ./build/main.js",
+    "buildwatch": "tsc --w --lib es2015 ./src/main.ts --outDir ./build",
+    "test": "mocha -r ts-node/register src/tests/**/**.ts",
+    "build": "tsc"
   },
   "repository": {
     "type": "git",
@@ -40,7 +42,12 @@
     "unzipper": "^0.8.14"
   },
   "devDependencies": {
-    "ts-node": "^6.1.1",
-    "typescript": "^2.9.2"
+    "@types/chai": "^4.1.6",
+    "@types/mocha": "^5.2.5",
+    "chai": "^4.2.0",
+    "mocha": "^5.2.0",
+    "ts-node": "^6.2.0",
+    "typescript": "^2.9.2",
+    "typings": "^2.1.1"
   }
 }
