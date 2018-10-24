@@ -1,4 +1,4 @@
-import { GatewayConfig } from './../abstractions/interfaces/gatewayConfig';
+import { GatewayConfig } from '../abstractions/interfaces/gatewayConfig';
 import { IotnxtQueue } from '../iotnxt/iotnxt'
 import { expect } from 'chai';
 import 'mocha';
@@ -41,6 +41,7 @@ describe('Queue Client Tests', () => {
 
     it('connectGreenQ : Connect to public Green Queue [mock config]', () => {
         queueClient.connectGreenQ((data) => {
+            let res = data;
             expect(data.Success).to.equal(true)
         })
     });

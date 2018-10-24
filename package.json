@@ -4,7 +4,7 @@
   "description": "Typescrypt based IoT framework for general purpose remote monitoring/control.",
   "main": "src/main.js",
   "scripts": {
-    "start": "node ./build/main.js",
+    "start": "tsc & node ./build/main.js",
     "buildwatch": "tsc --w --lib es2015 ./src/main.ts --outDir ./build",
     "test": "mocha -r ts-node/register src/tests/**/**.ts",
     "build": "tsc"
